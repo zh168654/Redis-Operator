@@ -4,7 +4,7 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	rapi "github.com/amadeusitgroup/redis-operator/pkg/api/redis/v1"
+	rapi "github.com/zh168654/Redis-Operator/pkg/api/redis/v1"
 )
 
 // newCondition return a new defaulted instance of a RedisClusterCondition

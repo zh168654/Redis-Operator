@@ -1,6 +1,6 @@
 package controller
 
-import "github.com/amadeusitgroup/redis-operator/pkg/config"
+import "github.com/zh168654/Redis-Operator/pkg/config"
 
 // Config contains the Controller settings
 type Config struct {

@@ -1,7 +1,7 @@
 package redis
 
 import (
-	"github.com/amadeusitgroup/redis-operator/pkg/api/redis/v1"
+	"github.com/zh168654/Redis-Operator/pkg/api/redis/v1"
 )
 
 // Cluster represents a Redis Cluster

@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/amadeusitgroup/redis-operator/pkg/config"
-	"github.com/amadeusitgroup/redis-operator/pkg/redis/fake/admin"
+	"github.com/zh168654/Redis-Operator/pkg/config"
+	"github.com/zh168654/Redis-Operator/pkg/redis/fake/admin"
 )
 
 func TestUpdateNodeConfigFile(t *testing.T) {

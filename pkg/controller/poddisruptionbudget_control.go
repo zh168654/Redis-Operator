@@ -11,8 +11,8 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
 
-	rapi "github.com/amadeusitgroup/redis-operator/pkg/api/redis/v1"
-	"github.com/amadeusitgroup/redis-operator/pkg/controller/pod"
+	rapi "github.com/zh168654/Redis-Operator/pkg/api/redis/v1"
+	"github.com/zh168654/Redis-Operator/pkg/controller/pod"
 )
 
 // PodDisruptionBudgetsControlInterface inferface for the PodDisruptionBudgetsControl

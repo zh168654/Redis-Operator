@@ -7,8 +7,8 @@ import (
 
 	kapi "k8s.io/api/core/v1"
 
-	rapi "github.com/amadeusitgroup/redis-operator/pkg/api/redis/v1"
-	podctrl "github.com/amadeusitgroup/redis-operator/pkg/controller/pod"
+	rapi "github.com/zh168654/Redis-Operator/pkg/api/redis/v1"
+	podctrl "github.com/zh168654/Redis-Operator/pkg/controller/pod"
 )
 
 func compareStatus(old, new *rapi.RedisClusterClusterStatus) bool {
@@ -151,12 +151,12 @@ func needClusterOperation(cluster *rapi.RedisCluster) bool {
 		return true
 	}
 
-	if needMorePods(cluster) {
+	if need, _ := needMorePods(cluster); need {
 		glog.V(6).Info("needClusterOperation---needMorePods")
 		return true
 	}
 
-	if needLessPods(cluster) {
+	if need, _ := needLessPods(cluster); need {
 		glog.Info("needClusterOperation---needLessPods")
 		return true
 	}
@@ -209,33 +209,33 @@ func comparePodSpecMD5Hash(hash string, pod *kapi.Pod) bool {
 	return true
 }
 
-func needMorePods(cluster *rapi.RedisCluster) bool {
+func needMorePods(cluster *rapi.RedisCluster) (bool, int32) {
 	nbPodNeed := *cluster.Spec.NumberOfMaster * (1 + *cluster.Spec.ReplicationFactor)
-
-	if cluster.Status.Cluster.NbPods != cluster.Status.Cluster.NbPodsReady {
-		return false
+	nbPods := cluster.Status.Cluster.NbPods
+	if nbPods != cluster.Status.Cluster.NbPodsReady {
+		return false, nbPods
 	}
 	output := false
-	if cluster.Status.Cluster.NbPods < nbPodNeed {
-		glog.V(4).Infof("Not enough Pods running to apply the cluster [%s-%s] spec, current %d, needed %d ", cluster.Namespace, cluster.Name, cluster.Status.Cluster.NbPodsReady, nbPodNeed)
+	if nbPods < nbPodNeed {
+		glog.V(4).Infof("Not enough Pods running to apply the cluster [%s-%s] spec, current %d, needed %d ", cluster.Namespace, cluster.Name, nbPods, nbPodNeed)
 		output = true
 	}
 
-	return output
+	return output, nbPods
 }
 
-func needLessPods(cluster *rapi.RedisCluster) bool {
+func needLessPods(cluster *rapi.RedisCluster) (bool, int32) {
 	nbPodNeed := *cluster.Spec.NumberOfMaster * (1 + *cluster.Spec.ReplicationFactor)
-
-	if cluster.Status.Cluster.NbPods != cluster.Status.Cluster.NbPodsReady {
-		return false
+	nbPods := cluster.Status.Cluster.NbPods
+	if nbPods != cluster.Status.Cluster.NbPodsReady {
+		return false, nbPods
 	}
 	output := false
-	if cluster.Status.Cluster.NbPods > nbPodNeed {
-		glog.V(4).Infof("To many Pods running, needs to scale down the cluster [%s-%s], current %d, needed %d ", cluster.Namespace, cluster.Name, cluster.Status.Cluster.NbPods, nbPodNeed)
+	if nbPods > nbPodNeed {
+		glog.V(4).Infof("To many Pods running, needs to scale down the cluster [%s-%s], current %d, needed %d ", cluster.Namespace, cluster.Name, nbPods, nbPodNeed)
 		output = true
 	}
-	return output
+	return output, nbPods
 }
 
 // checkReplicationFactor checks the master replication factor.
@@ -279,7 +279,7 @@ func checkNumberOfMaster(cluster *rapi.RedisCluster) (int32, bool) {
 // checkPodsUseless use to detect if some pod can be remove (delete) without any impacts
 func checkNoPodsUseless(cluster *rapi.RedisCluster) ([]*rapi.RedisClusterNode, bool) {
 	uselessNodes := []*rapi.RedisClusterNode{}
-	if !needLessPods(cluster) {
+	if need, _ := needLessPods(cluster); !need {
 		return uselessNodes, true
 	}
 

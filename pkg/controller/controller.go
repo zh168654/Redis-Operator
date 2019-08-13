@@ -24,13 +24,15 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 
-	rapi "github.com/amadeusitgroup/redis-operator/pkg/api/redis/v1"
-	rclient "github.com/amadeusitgroup/redis-operator/pkg/client/clientset/versioned"
-	rinformers "github.com/amadeusitgroup/redis-operator/pkg/client/informers/externalversions"
-	rlisters "github.com/amadeusitgroup/redis-operator/pkg/client/listers/redis/v1"
-	"github.com/amadeusitgroup/redis-operator/pkg/controller/pod"
-	"github.com/amadeusitgroup/redis-operator/pkg/controller/sanitycheck"
-	"github.com/amadeusitgroup/redis-operator/pkg/redis"
+	rapi "github.com/zh168654/Redis-Operator/pkg/api/redis/v1"
+	rclient "github.com/zh168654/Redis-Operator/pkg/client/clientset/versioned"
+	rinformers "github.com/zh168654/Redis-Operator/pkg/client/informers/externalversions"
+	rlisters "github.com/zh168654/Redis-Operator/pkg/client/listers/redis/v1"
+	"github.com/zh168654/Redis-Operator/pkg/controller/pod"
+	"github.com/zh168654/Redis-Operator/pkg/controller/sanitycheck"
+	"github.com/zh168654/Redis-Operator/pkg/redis"
+	"strings"
+	"strconv"
 )
 
 // Controller contains all controller fields
@@ -393,51 +395,110 @@ func (c *Controller) buildClusterStatus(admin redis.AdminInterface, clusterInfos
 	nbMaster := int32(0)
 	nbSlaveByMaster := map[string]int{}
 
-	for _, pod := range pods {
-		if podready, _ := IsPodReady(pod); podready {
-			nbPodsReady++
-		}
-
-		newNode := rapi.RedisClusterNode{
-			PodName: pod.Name,
-			IP:      pod.Status.PodIP,
-			Pod:     pod,
-			Slots:   []string{},
-		}
-		// find corresponding Redis node
-		redisNodes, err := clusterInfos.GetNodes().GetNodesByFunc(func(node *redis.Node) bool {
-			return node.IP == pod.Status.PodIP
-		})
-		if err != nil {
-			glog.Errorf("Unable to retrieve the associated Redis Node with the pod: %s, ip:%s, err:%v", pod.Name, pod.Status.PodIP, err)
-			continue
-		}
-		if len(redisNodes) == 1 {
-			redisNode := redisNodes[0]
-			if redis.IsMasterWithSlot(redisNode) {
-				if _, ok := nbSlaveByMaster[redisNode.ID]; !ok {
-					nbSlaveByMaster[redisNode.ID] = 0
-				}
-				nbMaster++
+	serviceNodePortStart := getServiceNodePortStart(cluster)
+	nodePortStart, err := strconv.Atoi(serviceNodePortStart)
+	// build cluster status by external or internal service type
+	if err == nil && strings.EqualFold(getServiceType(cluster), string(rapi.ServiceTypeExternal)) {
+		for _, pod := range pods {
+			if podready, _ := IsPodReady(pod); podready {
+				nbPodsReady++
 			}
 
-			newNode.ID = redisNode.ID
-			newNode.Role = redisNode.GetRole()
-			newNode.Port = redisNode.Port
-			newNode.Slots = []string{}
-			if redis.IsSlave(redisNode) && redisNode.MasterReferent != "" {
-				nbSlaveByMaster[redisNode.MasterReferent] = nbSlaveByMaster[redisNode.MasterReferent] + 1
-				newNode.MasterRef = redisNode.MasterReferent
-			}
-			if len(redisNode.Slots) > 0 {
-				slots := redis.SlotRangesFromSlots(redisNode.Slots)
-				for _, slot := range slots {
-					newNode.Slots = append(newNode.Slots, slot.String())
+			var podNo int
+			if podNoLabel, ok := pod.Labels[rapi.PodNoLabelKey]; !ok {
+				if podNo, err = strconv.Atoi(podNoLabel); err != nil {
+					glog.Errorf("Unable to get correct pod: %s, host ip:%s, err:%v", pod.Name, pod.Status.HostIP, err)
+					continue
 				}
 			}
-			nbRedisRunning++
+
+			newNode := rapi.RedisClusterNode{
+				PodName: pod.Name,
+				IP:      pod.Status.HostIP,
+				Port:    strconv.Itoa(nodePortStart + podNo),
+				Pod:     pod,
+				Slots:   []string{},
+			}
+			// find corresponding Redis node
+			redisNodes, err := clusterInfos.GetNodes().GetNodesByFunc(func(node *redis.Node) bool {
+				return node.IP == pod.Status.PodIP
+			})
+			if err != nil {
+				glog.Errorf("Unable to retrieve the associated Redis Node with the pod: %s, ip:%s, err:%v", pod.Name, pod.Status.HostIP, err)
+				continue
+			}
+			if len(redisNodes) == 1 {
+				redisNode := redisNodes[0]
+				if redis.IsMasterWithSlot(redisNode) {
+					if _, ok := nbSlaveByMaster[redisNode.ID]; !ok {
+						nbSlaveByMaster[redisNode.ID] = 0
+					}
+					nbMaster++
+				}
+
+				newNode.ID = redisNode.ID
+				newNode.Role = redisNode.GetRole()
+				newNode.Slots = []string{}
+				if redis.IsSlave(redisNode) && redisNode.MasterReferent != "" {
+					nbSlaveByMaster[redisNode.MasterReferent] = nbSlaveByMaster[redisNode.MasterReferent] + 1
+					newNode.MasterRef = redisNode.MasterReferent
+				}
+				if len(redisNode.Slots) > 0 {
+					slots := redis.SlotRangesFromSlots(redisNode.Slots)
+					for _, slot := range slots {
+						newNode.Slots = append(newNode.Slots, slot.String())
+					}
+				}
+				nbRedisRunning++
+			}
+			clusterStatus.Nodes = append(clusterStatus.Nodes, newNode)
 		}
-		clusterStatus.Nodes = append(clusterStatus.Nodes, newNode)
+	} else {
+		for _, pod := range pods {
+			if podready, _ := IsPodReady(pod); podready {
+				nbPodsReady++
+			}
+			newNode := rapi.RedisClusterNode{
+				PodName: pod.Name,
+				IP:      pod.Status.PodIP,
+				Pod:     pod,
+				Slots:   []string{},
+			}
+			// find corresponding Redis node
+			redisNodes, err := clusterInfos.GetNodes().GetNodesByFunc(func(node *redis.Node) bool {
+				return node.IP == pod.Status.PodIP
+			})
+			if err != nil {
+				glog.Errorf("Unable to retrieve the associated Redis Node with the pod: %s, ip:%s, err:%v", pod.Name, pod.Status.PodIP, err)
+				continue
+			}
+			if len(redisNodes) == 1 {
+				redisNode := redisNodes[0]
+				if redis.IsMasterWithSlot(redisNode) {
+					if _, ok := nbSlaveByMaster[redisNode.ID]; !ok {
+						nbSlaveByMaster[redisNode.ID] = 0
+					}
+					nbMaster++
+				}
+
+				newNode.ID = redisNode.ID
+				newNode.Role = redisNode.GetRole()
+				newNode.Port = redisNode.Port
+				newNode.Slots = []string{}
+				if redis.IsSlave(redisNode) && redisNode.MasterReferent != "" {
+					nbSlaveByMaster[redisNode.MasterReferent] = nbSlaveByMaster[redisNode.MasterReferent] + 1
+					newNode.MasterRef = redisNode.MasterReferent
+				}
+				if len(redisNode.Slots) > 0 {
+					slots := redis.SlotRangesFromSlots(redisNode.Slots)
+					for _, slot := range slots {
+						newNode.Slots = append(newNode.Slots, slot.String())
+					}
+				}
+				nbRedisRunning++
+			}
+			clusterStatus.Nodes = append(clusterStatus.Nodes, newNode)
+		}
 	}
 	clusterStatus.NbRedisRunning = nbRedisRunning
 	clusterStatus.NumberOfMaster = nbMaster

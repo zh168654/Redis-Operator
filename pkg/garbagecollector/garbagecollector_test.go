@@ -13,10 +13,10 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 	core "k8s.io/client-go/testing"
 
-	redis "github.com/amadeusitgroup/redis-operator/pkg/api/redis"
-	v1 "github.com/amadeusitgroup/redis-operator/pkg/api/redis/v1"
-	rfake "github.com/amadeusitgroup/redis-operator/pkg/client/clientset/versioned/fake"
-	rclister "github.com/amadeusitgroup/redis-operator/pkg/client/listers/redis/v1"
+	redis "github.com/zh168654/Redis-Operator/pkg/api/redis"
+	v1 "github.com/zh168654/Redis-Operator/pkg/api/redis/v1"
+	rfake "github.com/zh168654/Redis-Operator/pkg/client/clientset/versioned/fake"
+	rclister "github.com/zh168654/Redis-Operator/pkg/client/listers/redis/v1"
 )
 
 type FakeRedisClusterLister struct {

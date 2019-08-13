@@ -8,9 +8,9 @@ import (
 	"github.com/golang/glog"
 	"github.com/spf13/pflag"
 
-	"github.com/amadeusitgroup/redis-operator/pkg/redisnode"
-	"github.com/amadeusitgroup/redis-operator/pkg/signal"
-	"github.com/amadeusitgroup/redis-operator/pkg/utils"
+	"github.com/zh168654/Redis-Operator/pkg/redisnode"
+	"github.com/zh168654/Redis-Operator/pkg/signal"
+	"github.com/zh168654/Redis-Operator/pkg/utils"
 )
 
 func main() {

@@ -14,7 +14,7 @@ import (
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/record"
 
-	rapi "github.com/amadeusitgroup/redis-operator/pkg/api/redis/v1"
+	rapi "github.com/zh168654/Redis-Operator/pkg/api/redis/v1"
 	"github.com/golang/glog"
 )
 
@@ -23,7 +23,7 @@ type RedisClusterControlInteface interface {
 	// GetRedisClusterPods return list of Pod attached to a RedisCluster
 	GetRedisClusterPods(redisCluster *rapi.RedisCluster) ([]*kapiv1.Pod, error)
 	// CreatePod used to create a Pod from the RedisCluster pod template
-	CreatePod(redisCluster *rapi.RedisCluster) (*kapiv1.Pod, error)
+	CreatePod(redisCluster *rapi.RedisCluster, currentPods int32) (*kapiv1.Pod, error)
 	// DeletePod used to delete a pod from its name
 	DeletePod(redisCluster *rapi.RedisCluster, podName string) error
 	// DeletePodNow used to delete now (force) a pod from its name
@@ -59,8 +59,8 @@ func (p *RedisClusterControl) GetRedisClusterPods(redisCluster *rapi.RedisCluste
 }
 
 // CreatePod used to create a Pod from the RedisCluster pod template
-func (p *RedisClusterControl) CreatePod(redisCluster *rapi.RedisCluster) (*kapiv1.Pod, error) {
-	pod, err := initPod(redisCluster)
+func (p *RedisClusterControl) CreatePod(redisCluster *rapi.RedisCluster, currentPods int32) (*kapiv1.Pod, error) {
+	pod, err := initPod(redisCluster, currentPods)
 	if err != nil {
 		return pod, err
 	}
@@ -86,12 +86,12 @@ func (p *RedisClusterControl) deletePodGracefullperiode(redisCluster *rapi.Redis
 	return p.KubeClient.CoreV1().Pods(redisCluster.Namespace).Delete(podName, &metav1.DeleteOptions{GracePeriodSeconds: period})
 }
 
-func initPod(redisCluster *rapi.RedisCluster) (*kapiv1.Pod, error) {
+func initPod(redisCluster *rapi.RedisCluster, currentPods int32) (*kapiv1.Pod, error) {
 	if redisCluster == nil {
 		return nil, fmt.Errorf("rediscluster nil pointer")
 	}
 
-	desiredLabels, err := GetLabelsSet(redisCluster)
+	desiredPodLabels, err := GetPodLabelsSet(redisCluster, currentPods)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +103,7 @@ func initPod(redisCluster *rapi.RedisCluster) (*kapiv1.Pod, error) {
 	pod := &kapiv1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace:       redisCluster.Namespace,
-			Labels:          desiredLabels,
+			Labels:          desiredPodLabels,
 			Annotations:     desiredAnnotations,
 			GenerateName:    PodName,
 			OwnerReferences: []metav1.OwnerReference{BuildOwnerReference(redisCluster)},

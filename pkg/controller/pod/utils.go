@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"k8s.io/apimachinery/pkg/labels"
 
-	rapi "github.com/amadeusitgroup/redis-operator/pkg/api/redis/v1"
+	rapi "github.com/zh168654/Redis-Operator/pkg/api/redis/v1"
 )
 
-// GetLabelsSet return labels associated to the redis-node pods
+// GetLabelsSet return labels associated to the redis-node resources
 func GetLabelsSet(rediscluster *rapi.RedisCluster) (labels.Set, error) {
 	desiredLabels := labels.Set{}
 	if rediscluster == nil {
@@ -22,6 +22,16 @@ func GetLabelsSet(rediscluster *rapi.RedisCluster) (labels.Set, error) {
 		}
 	}
 	desiredLabels[rapi.ClusterNameLabelKey] = rediscluster.Name // add rediscluster name to the Pod labels
+	return desiredLabels, nil
+}
+
+// GetPodLabelsSet return labels associated to the redis-node pods
+func GetPodLabelsSet(rediscluster *rapi.RedisCluster, currentPods int32) (labels.Set, error) {
+	desiredLabels,err := GetLabelsSet(rediscluster)
+	if err!=nil{
+		return desiredLabels,err
+	}
+	desiredLabels[rapi.PodNoLabelKey] = string(currentPods)
 	return desiredLabels, nil
 }
 

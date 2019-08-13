@@ -8,6 +8,8 @@ spec:
   numberOfMaster: {{ .Values.numberOfMaster }}
   replicationFactor: {{ .Values.replicationFactor }}
   serviceName: {{ template "service-name" . }}
+  serviceType: {{ .Values.serviceType }}
+  serviceNodePortStart: {{ .Values.serviceNodePortStart }}
   podTemplate:
     metadata:
       labels:
@@ -35,6 +37,9 @@ spec:
             "--t=10s", 
             "--d=10s", 
             "--ns=$(POD_NAMESPACE)",
+            "--name={{ template "name" . }}",
+            "--rstype={{ .Values.serviceType }}",
+            "--rsnodeport={{ .Values.serviceNodePortStart }}",
             "--ip=$(POD_IP)",
 {{- if .Values.resources }}
              "--max-memory=$(MEMORY_REQUEST)",

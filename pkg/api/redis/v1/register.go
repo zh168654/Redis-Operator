@@ -5,7 +5,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	redis "github.com/amadeusitgroup/redis-operator/pkg/api/redis"
+	redis "github.com/zh168654/Redis-Operator/pkg/api/redis"
 )
 
 // SchemeGroupVersion is group version used to register these objects

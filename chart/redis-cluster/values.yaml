@@ -3,8 +3,11 @@
 # Declare variables to be passed into your templates.
 numberOfMaster: 3
 replicationFactor: 1
+serviceType: Internal
 # Override the default service name
-serviceName: 
+serviceName:
+# Make sure at least six ports start by serviceNodePortStart on the node are available
+serviceNodePortStart:
 serviceAccount:
 annotations:
   # kubernetes.io/ingress.class: nginx

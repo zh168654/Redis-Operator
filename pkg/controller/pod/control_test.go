@@ -8,7 +8,7 @@ import (
 	kapiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	rapi "github.com/amadeusitgroup/redis-operator/pkg/api/redis/v1"
+	rapi "github.com/zh168654/Redis-Operator/pkg/api/redis/v1"
 )
 
 func Test_initPod(t *testing.T) {
@@ -63,7 +63,7 @@ func Test_initPod(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := initPod(tt.args.redisCluster)
+			got, err := initPod(tt.args.redisCluster, 0)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("initPod() error = %v, wantErr %v", err, tt.wantErr)
 				return

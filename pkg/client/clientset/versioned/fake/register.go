@@ -24,7 +24,7 @@ SOFTWARE.
 package fake
 
 import (
-	redisoperatorv1 "github.com/amadeusitgroup/redis-operator/pkg/api/redis/v1"
+	redisoperatorv1 "github.com/zh168654/Redis-Operator/pkg/api/redis/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"

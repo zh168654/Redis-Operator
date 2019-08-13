@@ -10,9 +10,9 @@ import (
 	// for test lisibility
 	. "github.com/onsi/gomega"
 
-	rapi "github.com/amadeusitgroup/redis-operator/pkg/api/redis/v1"
-	"github.com/amadeusitgroup/redis-operator/pkg/client/clientset/versioned"
-	"github.com/amadeusitgroup/redis-operator/test/e2e/framework"
+	rapi "github.com/zh168654/Redis-Operator/pkg/api/redis/v1"
+	"github.com/zh168654/Redis-Operator/pkg/client/clientset/versioned"
+	"github.com/zh168654/Redis-Operator/test/e2e/framework"
 )
 
 func deleteRedisCluster(client versioned.Interface, rediscluster *rapi.RedisCluster) {
