@@ -2,19 +2,6 @@
 
 ![logo](docs/imgs/logo.png)
 
-### Build Status
-[![Build Status](https://travis-ci.org/AmadeusITGroup/Redis-Operator.svg?branch=master)](https://travis-ci.org/AmadeusITGroup/Redis-Operator)
-[![Go Report Card](https://goreportcard.com/badge/github.com/amadeusitgroup/redis-operator)](https://goreportcard.com/report/github.com/amadeusitgroup/redis-operator)
-[![codecov](https://codecov.io/gh/amadeusitgroup/redis-operator/branch/master/graph/badge.svg)](https://codecov.io/gh/amadeusitgroup/redis-operator)
-
-
-
-## Project status: alpha
-
-This is an ongoing project.
-
-The aim of this project is to ease the deployment and operations of a [Redis-cluster](https://redis.io/topics/cluster-tutorial) in a [kubernetes](https://kubernetes.io/) environment. It started internally at Amadeus in 2016, we initially designed this project to run on [Openshift](https://www.openshift.com/). This is the second version of our Redis-Operator that is based now on Kubernetes CustomResourceDefinition (CRD) for representing the RedisCluster configuration.
-
 ## Overview
 
 The Redis-cluster will be deployed thanks to a unique deployment. Each node of the Redis-cluster is running in its own Pod; At startup, each node has no active role (not slave nor master with slot), it just joins the cluster as a master without slot. See representation in the schema below 
