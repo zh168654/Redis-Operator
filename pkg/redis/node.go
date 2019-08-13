@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/amadeusitgroup/redis-operator/pkg/api/redis/v1"
-	"github.com/amadeusitgroup/redis-operator/pkg/utils"
+	"github.com/zh168654/Redis-Operator/pkg/api/redis/v1"
+	"github.com/zh168654/Redis-Operator/pkg/utils"
 	kapiv1 "k8s.io/api/core/v1"
 )
 

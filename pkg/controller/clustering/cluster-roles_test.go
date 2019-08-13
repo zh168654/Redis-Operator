@@ -4,8 +4,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/amadeusitgroup/redis-operator/pkg/redis"
-	"github.com/amadeusitgroup/redis-operator/pkg/redis/fake/admin"
+	"github.com/zh168654/Redis-Operator/pkg/redis"
+	"github.com/zh168654/Redis-Operator/pkg/redis/fake/admin"
 )
 
 func TestAssignSlave(t *testing.T) {

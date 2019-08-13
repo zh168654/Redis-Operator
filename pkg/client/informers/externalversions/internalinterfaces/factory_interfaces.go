@@ -27,7 +27,7 @@ SOFTWARE.
 package internalinterfaces
 
 import (
-	versioned "github.com/amadeusitgroup/redis-operator/pkg/client/clientset/versioned"
+	versioned "github.com/zh168654/Redis-Operator/pkg/client/clientset/versioned"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	cache "k8s.io/client-go/tools/cache"

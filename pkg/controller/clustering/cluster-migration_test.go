@@ -5,8 +5,8 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/amadeusitgroup/redis-operator/pkg/redis"
-	"github.com/amadeusitgroup/redis-operator/pkg/redis/fake/admin"
+	"github.com/zh168654/Redis-Operator/pkg/redis"
+	"github.com/zh168654/Redis-Operator/pkg/redis/fake/admin"
 )
 
 func TestDispatchSlotToMaster(t *testing.T) {

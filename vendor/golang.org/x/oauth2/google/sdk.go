@@ -1,4 +1,4 @@
-// Copyright 2015 The Go Authors. All rights reserved.
+// Copyright 2015 The oauth2 Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -160,13 +160,9 @@ var sdkConfigPath = func() (string, error) {
 }
 
 func guessUnixHomeDir() string {
-	// Prefer $HOME over user.Current due to glibc bug: golang.org/issue/13470
-	if v := os.Getenv("HOME"); v != "" {
-		return v
+	usr, err := user.Current()
+	if err == nil {
+		return usr.HomeDir
 	}
-	// Else, fall back to user.Current:
-	if u, err := user.Current(); err == nil {
-		return u.HomeDir
-	}
-	return ""
+	return os.Getenv("HOME")
 }

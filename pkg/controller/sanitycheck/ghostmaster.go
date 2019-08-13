@@ -5,9 +5,9 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/errors"
 
-	rapi "github.com/amadeusitgroup/redis-operator/pkg/api/redis/v1"
-	"github.com/amadeusitgroup/redis-operator/pkg/controller/pod"
-	"github.com/amadeusitgroup/redis-operator/pkg/redis"
+	rapi "github.com/zh168654/Redis-Operator/pkg/api/redis/v1"
+	"github.com/zh168654/Redis-Operator/pkg/controller/pod"
+	"github.com/zh168654/Redis-Operator/pkg/redis"
 )
 
 // FixGhostMasterNodes used to removed gost redis nodes

@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"strconv"
 	"time"
 
 	"github.com/golang/glog"
@@ -20,12 +19,17 @@ import (
 
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/apimachinery/pkg/labels"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
-	"github.com/amadeusitgroup/redis-operator/pkg/redis"
-	"github.com/amadeusitgroup/redis-operator/pkg/utils"
+	"github.com/zh168654/Redis-Operator/pkg/redis"
+	"github.com/zh168654/Redis-Operator/pkg/utils"
+	"github.com/zh168654/Redis-Operator/pkg/config"
+	"strings"
+	"github.com/zh168654/Redis-Operator/pkg/api/redis/v1"
+	"strconv"
 )
 
 // RedisNode constains all info to run the redis-node.
@@ -97,7 +101,7 @@ func (r *RedisNode) init() (*Node, error) {
 	// 2*nodetimeout for failed state detection, 2*nodetimeout for voting, 2*nodetimeout for safety
 	time.Sleep(r.config.RedisStartDelay)
 
-	nodesAddr, err := getRedisNodesAddrs(r.kubeClient, r.config.Cluster.Namespace, r.config.Cluster.NodeService)
+	nodesAddr, err := getRedisNodesAddrs(r.kubeClient, r.config.Cluster)
 	if err != nil {
 		glog.Warning(err)
 	}
@@ -186,7 +190,7 @@ func (r *RedisNode) run(me *Node) (*Node, error) {
 
 func (r *RedisNode) isClusterInitialization(currentIP string) ([]string, bool) {
 	var initCluster = true
-	nodesAddr, _ := getRedisNodesAddrs(r.kubeClient, r.config.Cluster.Namespace, r.config.Cluster.NodeService)
+	nodesAddr, _ := getRedisNodesAddrs(r.kubeClient, r.config.Cluster)
 	if len(nodesAddr) > 0 {
 		initCluster = false
 		if glog.V(3) {
@@ -207,7 +211,7 @@ func (r *RedisNode) isClusterInitialization(currentIP string) ([]string, bool) {
 }
 
 func (r *RedisNode) handleStop(me *Node) error {
-	nodesAddr, err := getRedisNodesAddrs(r.kubeClient, r.config.Cluster.Namespace, r.config.Cluster.NodeService)
+	nodesAddr, err := getRedisNodesAddrs(r.kubeClient, r.config.Cluster)
 	if err != nil {
 		glog.Error("Unable to retrieve Redis Node, err:", err)
 		return err
@@ -343,17 +347,40 @@ func testAndWaitConnection(addr string, maxWait time.Duration) error {
 	}
 }
 
-func getRedisNodesAddrs(kubeClient clientset.Interface, namespace, service string) ([]string, error) {
+func getRedisNodesAddrs(kubeClient clientset.Interface, clusterConfig config.Cluster) ([]string, error) {
 	addrs := []string{}
-	eps, err := kubeClient.CoreV1().Endpoints(namespace).Get(service, meta_v1.GetOptions{})
-	if err != nil {
-		return addrs, err
-	}
 
-	for _, subset := range eps.Subsets {
-		for _, host := range subset.Addresses {
-			for _, port := range subset.Ports {
-				addrs = append(addrs, net.JoinHostPort(host.IP, strconv.Itoa(int(port.Port))))
+	// get redis nodes addrs by external or internal service type
+	if clusterConfig.NodeServiceNodePort != "" && strings.EqualFold(clusterConfig.NodeServiceType, string(v1.ServiceTypeExternal)) {
+		labelSelector := meta_v1.LabelSelector{MatchLabels: map[string]string{v1.ClusterNameLabelKey: clusterConfig.Name}}
+		pods, err := kubeClient.CoreV1().Pods(clusterConfig.Namespace).List(meta_v1.ListOptions{LabelSelector: labels.Set(labelSelector.MatchLabels).String()})
+		if err != nil {
+			return addrs, err
+		}
+
+		for _, pod := range pods.Items {
+			var nodePortStart, podNo int
+			if nodePortStart, err = strconv.Atoi(clusterConfig.NodeServiceNodePort); err != nil {
+				return addrs, err
+			}
+			if podNoLabel, ok := pod.Labels[v1.PodNoLabelKey]; !ok{
+				if podNo, err = strconv.Atoi(podNoLabel); err != nil {
+					return addrs, err
+				}
+				addrs = append(addrs, net.JoinHostPort(pod.Status.HostIP, strconv.Itoa(nodePortStart+podNo)))
+			}
+		}
+	} else {
+		eps, err := kubeClient.CoreV1().Endpoints(clusterConfig.Namespace).Get(clusterConfig.NodeService, meta_v1.GetOptions{})
+		if err != nil {
+			return addrs, err
+		}
+
+		for _, subset := range eps.Subsets {
+			for _, host := range subset.Addresses {
+				for _, port := range subset.Ports {
+					addrs = append(addrs, net.JoinHostPort(host.IP, strconv.Itoa(int(port.Port))))
+				}
 			}
 		}
 	}

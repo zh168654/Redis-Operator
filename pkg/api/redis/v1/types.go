@@ -43,9 +43,12 @@ type RedisClusterSpec struct {
 	NumberOfMaster    *int32 `json:"numberOfMaster,omitempty"`
 	ReplicationFactor *int32 `json:"replicationFactor,omitempty"`
 
+	ServiceType string `json:"serviceType,omitempty"`
 	// ServiceName name used to create the Kubernetes Service that reference the Redis Cluster nodes.
 	// if ServiceName is empty, the RedisCluster.Name will be use for creating the service.
 	ServiceName string `json:"serviceName,omitempty"`
+	// ServiceNodePortStart is the start port of standard service exposed by each pod
+	ServiceNodePortStart string `json:"serviceNodePortStart,omitempty"`
 
 	// PodTemplate contains the pod specificaton that should run the redis-server process
 	PodTemplate *kapiv1.PodTemplateSpec `json:"podTemplate,omitempty"`
@@ -195,4 +198,14 @@ const (
 	ClusterStatusRebalancing ClusterStatus = "Rebalancing"
 	// ClusterStatusRollingUpdate ClusterStatus RollingUpdate
 	ClusterStatusRollingUpdate ClusterStatus = "RollingUpdate"
+)
+
+// ServiceType Redis Cluster service type
+type ServiceType string
+
+const (
+	// ServiceTypeInternal means only create a headless service
+	ServiceTypeInternal ServiceType = "Internal"
+	// ServiceTypeExternal means create a list of nodePort services for each pod and a headless service
+	ServiceTypeExternal ServiceType = "External"
 )

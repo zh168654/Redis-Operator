@@ -27,7 +27,7 @@ SOFTWARE.
 package v1
 
 import (
-	internalinterfaces "github.com/amadeusitgroup/redis-operator/pkg/client/informers/externalversions/internalinterfaces"
+	internalinterfaces "github.com/zh168654/Redis-Operator/pkg/client/informers/externalversions/internalinterfaces"
 )
 
 // Interface provides access to all the informers in this group version.

@@ -6,10 +6,10 @@ import (
 	kapiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	rapi "github.com/amadeusitgroup/redis-operator/pkg/api/redis/v1"
-	"github.com/amadeusitgroup/redis-operator/pkg/controller/pod"
-	"github.com/amadeusitgroup/redis-operator/pkg/redis"
-	"github.com/amadeusitgroup/redis-operator/pkg/redis/fake/admin"
+	rapi "github.com/zh168654/Redis-Operator/pkg/api/redis/v1"
+	"github.com/zh168654/Redis-Operator/pkg/controller/pod"
+	"github.com/zh168654/Redis-Operator/pkg/redis"
+	"github.com/zh168654/Redis-Operator/pkg/redis/fake/admin"
 )
 
 func TestFixGhostMasterNodes(t *testing.T) {

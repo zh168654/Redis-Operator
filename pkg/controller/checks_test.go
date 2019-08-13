@@ -8,8 +8,8 @@ import (
 	kapi "k8s.io/api/core/v1"
 	kmetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	rapi "github.com/amadeusitgroup/redis-operator/pkg/api/redis/v1"
-	ctrlpod "github.com/amadeusitgroup/redis-operator/pkg/controller/pod"
+	rapi "github.com/zh168654/Redis-Operator/pkg/api/redis/v1"
+	ctrlpod "github.com/zh168654/Redis-Operator/pkg/controller/pod"
 )
 
 func Test_checkReplicationFactor(t *testing.T) {
@@ -391,7 +391,7 @@ func Test_needMorePods(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := needMorePods(tt.args.cluster); got != tt.want {
+			if got, _ := needMorePods(tt.args.cluster); got != tt.want {
 				t.Errorf("needMorePods() = %v, want %v", got, tt.want)
 			}
 		})
@@ -485,7 +485,7 @@ func Test_needLessPods(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := needLessPods(tt.args.cluster); got != tt.want {
+			if got, _ := needLessPods(tt.args.cluster); got != tt.want {
 				t.Errorf("needLessPods() = %v, want %v", got, tt.want)
 			}
 		})
@@ -1137,11 +1137,11 @@ func Test_comparePodSpec(t *testing.T) {
 
 func Test_filterLostNodes(t *testing.T) {
 	var pods []*kapi.Pod
-	pods = append(pods, &kapi.Pod{ Status: kapi.PodStatus{Reason:"Running"}})
-	pods = append(pods, &kapi.Pod{ Status: kapi.PodStatus{Reason:"Finished"}})
-	pods = append(pods, &kapi.Pod{ Status: kapi.PodStatus{Reason:"NodeLost"}})
-	ok , ko := filterLostNodes(pods)
+	pods = append(pods, &kapi.Pod{Status: kapi.PodStatus{Reason: "Running"}})
+	pods = append(pods, &kapi.Pod{Status: kapi.PodStatus{Reason: "Finished"}})
+	pods = append(pods, &kapi.Pod{Status: kapi.PodStatus{Reason: "NodeLost"}})
+	ok, ko := filterLostNodes(pods)
 	if !(len(ok) == 2 || len(ko) == 1) {
-		t.Errorf("filterLostNodes() wrong result ok: %v, ko: %v", ok , ko)
+		t.Errorf("filterLostNodes() wrong result ok: %v, ko: %v", ok, ko)
 	}
 }

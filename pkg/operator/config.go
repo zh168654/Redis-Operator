@@ -3,7 +3,7 @@ package operator
 import (
 	"github.com/spf13/pflag"
 
-	"github.com/amadeusitgroup/redis-operator/pkg/config"
+	"github.com/zh168654/Redis-Operator/pkg/config"
 )
 
 // Config contains configuration for redis-operator

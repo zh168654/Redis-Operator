@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/amadeusitgroup/redis-operator/pkg/config"
-	"github.com/amadeusitgroup/redis-operator/pkg/redis"
+	"github.com/zh168654/Redis-Operator/pkg/config"
+	"github.com/zh168654/Redis-Operator/pkg/redis"
 	"github.com/golang/glog"
 )
 
@@ -34,7 +34,7 @@ func NewNode(c *Config, admin redis.AdminInterface) *Node {
 	return n
 }
 
-// Clear clear possible initialize ressource
+// Clear clear possible initialize resource
 func (n *Node) Clear() {
 
 	if n.RedisAdmin != nil {

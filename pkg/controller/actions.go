@@ -8,11 +8,11 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/errors"
 
-	rapi "github.com/amadeusitgroup/redis-operator/pkg/api/redis/v1"
-	"github.com/amadeusitgroup/redis-operator/pkg/controller/clustering"
-	podctrl "github.com/amadeusitgroup/redis-operator/pkg/controller/pod"
-	"github.com/amadeusitgroup/redis-operator/pkg/controller/sanitycheck"
-	"github.com/amadeusitgroup/redis-operator/pkg/redis"
+	rapi "github.com/zh168654/Redis-Operator/pkg/api/redis/v1"
+	"github.com/zh168654/Redis-Operator/pkg/controller/clustering"
+	podctrl "github.com/zh168654/Redis-Operator/pkg/controller/pod"
+	"github.com/zh168654/Redis-Operator/pkg/controller/sanitycheck"
+	"github.com/zh168654/Redis-Operator/pkg/redis"
 )
 
 func (c *Controller) clusterAction(admin redis.AdminInterface, cluster *rapi.RedisCluster, infos *redis.ClusterInfos) (bool, error) {
@@ -29,16 +29,21 @@ func (c *Controller) clusterAction(admin redis.AdminInterface, cluster *rapi.Red
 	}
 
 	// Start more pods in needed
-	if needMorePods(cluster) {
+	if need, currentPods := needMorePods(cluster); need {
 		if setScalingCondition(&cluster.Status, true) {
 			if cluster, err = c.updateHandler(cluster); err != nil {
 				return false, err
 			}
 		}
-		pod, err2 := c.podControl.CreatePod(cluster)
+		pod, err2 := c.podControl.CreatePod(cluster, currentPods)
 		if err2 != nil {
 			glog.Errorf("[clusterAction] unable to create a pod associated to the RedisCluster: %s/%s, err: %v", cluster.Namespace, cluster.Name, err2)
 			return false, err2
+		}
+		_, err3 := c.serviceControl.AddRedisPodService(cluster, currentPods)
+		if err3 != nil {
+			glog.Errorf("[clusterAction] unable to create an external service exposed by the new pod associated to the RedisCluster: %s/%s, err: %v", cluster.Namespace, cluster.Name, err3)
+			return false, err3
 		}
 
 		glog.V(3).Infof("[clusterAction]create a Pod %s/%s", pod.Namespace, pod.Name)
@@ -73,7 +78,7 @@ func (c *Controller) manageRollingUpdate(admin redis.AdminInterface, cluster *ra
 	nbPodToCreate := nbRequirePodForSpec + nbPodByNodeMigration - cluster.Status.Cluster.NbPods
 	if nbPodToCreate > 0 {
 		for i := int32(0); i < nbPodToCreate; i++ {
-			_, err := c.podControl.CreatePod(cluster)
+			_, err := c.podControl.CreatePod(cluster, cluster.Status.Cluster.NbPods)
 			if err != nil {
 				return false, err
 			}
@@ -154,13 +159,16 @@ func (c *Controller) manageRollingUpdate(admin redis.AdminInterface, cluster *ra
 }
 
 // managePodScaleDown used to manage properly the scale down of a cluster
-func (c *Controller) managePodScaleDown(admin redis.AdminInterface, cluster *rapi.RedisCluster, rCluster *redis.Cluster, nodes redis.Nodes) (bool, error) {
+func (c *Controller) managePodScaleDown(admin redis.AdminInterface, cluster *rapi.RedisCluster, rCluster *redis.Cluster, nodes redis.Nodes, currentPods int32) (bool, error) {
 	glog.V(6).Info("managePodScaleDown START")
 	defer glog.V(6).Info("managePodScaleDown STOP")
 
 	if uselessNodes, ok := checkNoPodsUseless(cluster); !ok {
 		for _, node := range uselessNodes {
 			if err := c.podControl.DeletePod(cluster, node.PodName); err != nil {
+				return false, err
+			}
+			if err := c.serviceControl.RemoveRedisPodService(cluster, currentPods); err != nil {
 				return false, err
 			}
 		}
@@ -418,14 +426,14 @@ func (c *Controller) applyConfiguration(admin redis.AdminInterface, cluster *rap
 		}
 	}
 
-	if needLessPods(cluster) {
+	if need, currentPods := needLessPods(cluster); need {
 		if setRebalancingCondition(&cluster.Status, true) {
 			if cluster, err = c.updateHandler(cluster); err != nil {
 				return false, err
 			}
 		}
 		glog.Info("applyConfiguration needLessPods")
-		return c.managePodScaleDown(admin, cluster, rCluster, nodes)
+		return c.managePodScaleDown(admin, cluster, rCluster, nodes, currentPods)
 	}
 	if setRebalancingCondition(&cluster.Status, false) {
 		if cluster, err = c.updateHandler(cluster); err != nil {
